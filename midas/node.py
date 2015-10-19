@@ -15,10 +15,20 @@ import sys
 import zmq
 import time
 import json
+import signal
 import inspect
 import multiprocessing as mp
 from . import utilities as mu
 import pylsl as lsl
+
+
+recv_sigterm = False
+
+
+def signal_handler(signal, frame):
+    global recv_sigterm
+    print('Received SIGTERM')
+    recv_sigterm = True
 
 
 class BaseNode(object):
@@ -845,6 +855,15 @@ class BaseNode(object):
             if tmp == "q":
                 self.stop()
                 sys.exit(0)
+
+    def no_ui(self):
+        """ If you want to use this with signals. """
+        signal.signal(signal.SIGTERM, signal_handler)
+        while not recv_sigterm:
+            time.sleep(2)
+
+        self.stop()
+        sys.exit(0)
 
     # -------------------------------------------------------------------------
     # Generate metric list
