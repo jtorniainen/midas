@@ -27,8 +27,9 @@ recv_sigterm = False
 
 def signal_handler(signal, frame):
     global recv_sigterm
-    print('Received SIGTERM')
-    recv_sigterm = True
+    if not recv_sigterm:
+        print('Received SIGTERM! Terminating.')
+        recv_sigterm = True
 
 
 class BaseNode(object):
@@ -862,6 +863,7 @@ class BaseNode(object):
         while not recv_sigterm:
             time.sleep(2)
 
+        print('Called stop from no_ui')
         self.stop()
         sys.exit(0)
 
