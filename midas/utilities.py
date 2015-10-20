@@ -16,8 +16,10 @@ import zmq
 import time
 import select
 import socket
+import signal
 import os.path
 import threading
+import subprocess
 import configparser
 from multiprocessing import Lock, Value
 
@@ -497,3 +499,55 @@ def LRU_queue_broker(url_frontend, url_backend, NBR_WORKERS, run_state):
     backend.close()
     context.term()
 # -----------------------------------------------------------------------------
+
+
+def run_midas(config_file):
+    # TODO: Needs a --help
+
+    # root_directory = os.path.dirname(os.path.realpath(__file__))
+    root_directory = os.getcwd()
+    config_file = ''.join((root_directory, '/', config_file))
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    # Start all modules
+    print('Starting MIDAS Network')
+    proc_list = {}
+    for module in config.sections():
+        module_path = ''.join((root_directory, '/', module, '.py'))
+        # Should add a check here to see if its an actual file
+        proc_log = open(''.join((module, '.log')), 'w')
+
+        if module == 'dispatcher':
+            command = ['midas-dispatcher', module_path, config_file, module]
+        else:
+            command = ['python3', module_path, config_file, module]
+
+        proc_list[module] = subprocess.Popen(command,
+                                             stdout=proc_log,
+                                             stderr=subprocess.STDOUT)
+        print('\t[\033[92mONLINE\033[0m] {}'.format(module))
+        time.sleep(1)
+
+    try:
+        while True:
+            user_input = input('>')
+            if user_input == 'q':
+                break
+    except KeyboardInterrupt:
+        pass
+
+    # Shutdown processes
+    print('Shutting down...')
+    for proc_name in proc_list.keys():
+        print('\t[\033[91mOFFLINE\033[0m] {}'.format(proc_name))
+        proc_list[proc_name].send_signal(signal.SIGTERM)
+        time.sleep(1)
+
+    time.sleep(4)
+
+    print('..done')
+
+
+def run_from_cli():
+    run_midas(sys.argv[1])

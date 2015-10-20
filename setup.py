@@ -15,5 +15,6 @@ setup(name='midas',
                           'Waitress>=0.8.9',
                           'pylsl>=1.10.4'],
       entry_points={"console_scripts":
-                    ["midas-dispatcher = midas.dispatcher:run_from_cli"]}
+                    ["midas-dispatcher = midas.dispatcher:run_from_cli",
+                     "midas = midas.utilities:run_from_cli"]}
 )
