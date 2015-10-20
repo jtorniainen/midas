@@ -60,7 +60,8 @@ class BaseNode(object):
                  buffer_size_secondary=0,
                  channel_names_secondary=[],
                  channel_descriptions_secondary=None,
-                 default_channel=''):
+                 default_channel='',
+                 use_ui=True):
         """ Initializes a basic MIDAS node class. Arguments can be passed either
             as config dict or specified spearately. If argumets are passed via
             both methods the ini-file will overwrite manually specified
@@ -147,6 +148,9 @@ class BaseNode(object):
                     config,
                     'channel_descriptions_secondary')
 
+            if 'use_ui' in config:
+                use_ui = mu.str2bool(config['use_ui'])
+
         # general node properties
         self.nodename = nodename
         self.nodetype = nodetype
@@ -158,6 +162,7 @@ class BaseNode(object):
         self.port_publisher = port_publisher
         self.run_publisher = run_publisher
         self.n_workers = n_workers
+        self.use_ui = use_ui
 
         # Automatically determine the IP of the node unless set in the node
         # configuration
@@ -851,20 +856,19 @@ class BaseNode(object):
     # -------------------------------------------------------------------------
     def show_ui(self):
         """ Show a minimal user interface. """
-        while True:
-            tmp = input(" > ")
-            if tmp == "q":
-                self.stop()
-                sys.exit(0)
+        if self.use_ui:
+            while True:
+                tmp = input(" > ")
+                if tmp == "q":
+                    self.stop()
+                    sys.exit(0)
+        else:
+            signal.signal(signal.SIGTERM, signal_handler)
+            while not recv_sigterm:
+                time.sleep(2)
 
-    def no_ui(self):
-        """ If you want to use this with signals. """
-        signal.signal(signal.SIGTERM, signal_handler)
-        while not recv_sigterm:
-            time.sleep(2)
-
-        self.stop()
-        sys.exit(0)
+            self.stop()
+            sys.exit(0)
 
     # -------------------------------------------------------------------------
     # Generate metric list
