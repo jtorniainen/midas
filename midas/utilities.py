@@ -509,6 +509,7 @@ def run_midas(config_file):
     config_file = ''.join((root_directory, '/', config_file))
     config = configparser.ConfigParser()
     config.read(config_file)
+    print('Configuration file={}'.format(config_file))
 
     # Start all modules
     print('Starting MIDAS Network')
@@ -519,7 +520,7 @@ def run_midas(config_file):
         proc_log = open(''.join((module, '.log')), 'w')
 
         if module == 'dispatcher':
-            command = ['midas-dispatcher', module_path, config_file, module]
+            command = ['midas-dispatcher', config_file, module]
         else:
             command = ['python3', module_path, config_file, module]
 
