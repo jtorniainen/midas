@@ -515,7 +515,7 @@ def run_midas(config_file):
     print('Starting MIDAS Network')
     proc_list = {}
     for module in config.sections():
-        module_path = ''.join((root_directory, '/', module, '.py'))
+        module_path = ''.join((root_directory, '/', config[module]['filename']))
         # Should add a check here to see if its an actual file
         proc_log = open(''.join((module, '.log')), 'w')
 
