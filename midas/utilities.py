@@ -534,10 +534,9 @@ def run_midas(config_file):
         time.sleep(1)
 
     try:
-        while True:
+        user_input = ''
+        while user_input != 'q':
             user_input = input('>')
-            if user_input == 'q':
-                break
     except KeyboardInterrupt:
         pass
 
