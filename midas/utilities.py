@@ -515,13 +515,16 @@ def run_midas(config_file):
     print('Starting MIDAS Network')
     proc_list = {}
     for module in config.sections():
-        module_path = ''.join((root_directory, '/', config[module]['filename']))
         # Should add a check here to see if its an actual file
         proc_log = open(''.join((module, '.log')), 'w')
 
         if module == 'dispatcher':
             command = ['midas-dispatcher', config_file, module]
         else:
+
+            module_name = config[module]['filename']
+            module_path = ''.join((root_directory, '/', module_name))
+
             command = ['python3', module_path, config_file, module]
 
         proc_list[module] = subprocess.Popen(command,
