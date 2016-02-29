@@ -30,8 +30,8 @@ class Beacon(object):
 
     def __init__(self,
                  name='',
-                 type='',
-                 id='',
+                 node_type='',
+                 node_id='',
                  ip=None,
                  port='',
                  protocol='tcp',
@@ -41,8 +41,8 @@ class Beacon(object):
         """ Create the beacon and set some properties, but do not start it. """
 
         self.name = name
-        self.type = type
-        self.id = id
+        self.type = node_type
+        self.id = node_id
         self.ip = ip
         self.port = port
         self.protocol = protocol
@@ -63,7 +63,6 @@ class Beacon(object):
         self.is_running = True
         t = threading.Thread(target=self.broadcast)
         t.start()
-    # -------------------------------------------------------------------------
 
     def broadcast(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -74,19 +73,16 @@ class Beacon(object):
             try:
                 s.sendto(self.data, ('<broadcast>', self.port_broadcast))
             except OSError:
-                print('Broadcast error in beacon.')
+                s.sendto(self.data, ('localhost', self.port_broadcast))
             time.sleep(self.interval)
-    # -------------------------------------------------------------------------
 
     def stop(self):
         """ Stop the beacon. """
         if self.is_running:
             self.is_running = False
-    # -------------------------------------------------------------------------
 
     def update_data(self):
-        url_node = str(self.protocol) + '://' + \
-            str(self.ip) + ':' + str(self.port)
+        url_node = '{}://{}:{}'.format(self.protocol, self.ip, self.port)
 
         data = ';'.join(['midas',
                          str(self.name),
@@ -96,7 +92,6 @@ class Beacon(object):
                          str(self.status)
                          ])
         self.data = str.encode(data)
-    # -------------------------------------------------------------------------
 
     def set_status(self, status):
         """ Set the status of the node.
@@ -130,10 +125,6 @@ class DataState(object):
 
     def getstate(self):
         return(self.state.value)
-
-# -----------------------------------------------------------------------------
-# Service discovery
-# -----------------------------------------------------------------------------
 
 
 def discover_all_nodes(timeout=10, port_broadcast=5670):
@@ -171,7 +162,6 @@ def discover_all_nodes(timeout=10, port_broadcast=5670):
     s.close()
 
     return node_dict
-# -----------------------------------------------------------------------------
 
 
 def validate_message(message):
@@ -187,7 +177,6 @@ def validate_message(message):
         result = dict(zip(k, message[1:]))
 
     return result
-# -----------------------------------------------------------------------------
 
 
 def filter_nodes(node_dict, f={}):
@@ -216,16 +205,11 @@ def filter_nodes(node_dict, f={}):
         matching_nodes = node_dict
 
     return matching_nodes
-# -----------------------------------------------------------------------------
 
 
 def make_string(d, key_list):
     """ Make a string from dictionary values using keys given as a list. """
     return ';'.join([str(d[k]) for k in key_list])
-
-# -----------------------------------------------------------------------------
-# Messages
-# -----------------------------------------------------------------------------
 
 
 def midas_send(socket, message_type, message, address=None):
@@ -245,7 +229,6 @@ def midas_recv(socket):
     msg_type = socket.recv_string()
     message = socket.recv_string()
     return address, msg_type, message
-# -----------------------------------------------------------------------------
 
 
 def get_ip():
@@ -260,7 +243,6 @@ def get_ip():
         ip = '127.0.0.1'
 
     return(ip)
-# -----------------------------------------------------------------------------
 
 
 def midas_parse_config(nodeclass, *args):
@@ -295,7 +277,6 @@ def midas_parse_config(nodeclass, *args):
 
     # Create the node
     return nodeclass(tmp)
-# -----------------------------------------------------------------------------
 
 
 def parse_config_to_dict(cfg_file, section):
@@ -315,28 +296,24 @@ def parse_config_to_dict(cfg_file, section):
     else:
         print("Section '%s' not found in file %s!" % (section, cfg_file))
         return None
-# -----------------------------------------------------------------------------
 
 
 def python_version():
     """ Return the major Python version (2 or 3) """
 
     return(float(sys.version[0]))
-# -----------------------------------------------------------------------------
 
 
 def make_url(ip, port, protocol='tcp'):
     """ Return a URL """
 
-    return protocol + '://' + ip + ':' + str(port)
-# -----------------------------------------------------------------------------
+    return '{}://{}:{}'.format(protocol, ip, port)
 
 
 def str2bool(x):
     """ Convert a string to a boolean. """
 
     return x.lower() in ("true", "1")
-# -----------------------------------------------------------------------------
 
 
 def listify(config, key, sep=','):
@@ -345,7 +322,6 @@ def listify(config, key, sep=','):
     """
 
     return [i.strip() for i in config[key].split(sep)]
-# -----------------------------------------------------------------------------
 
 
 def find_range(array, win):
@@ -371,7 +347,6 @@ def find_range(array, win):
             i1 = idx
 
     return i0, i1
-# -----------------------------------------------------------------------------
 
 
 def LRU_queue_broker(url_frontend, url_backend, NBR_WORKERS, run_state):
@@ -384,7 +359,7 @@ def LRU_queue_broker(url_frontend, url_backend, NBR_WORKERS, run_state):
         run_state: <integer> boolean "poison pill" to signal termination to the
                              process
 
-    This function is slightly modified from http://zguide.zeromq.org/py:lruqueue
+    This function is modified from http://zguide.zeromq.org/py:lruqueue
     originally written by Guillaume Aubert (gaubert)
     <guillaume(dot)aubert(at)gmail(dot)com>.
 
@@ -498,7 +473,6 @@ def LRU_queue_broker(url_frontend, url_backend, NBR_WORKERS, run_state):
     frontend.close()
     backend.close()
     context.term()
-# -----------------------------------------------------------------------------
 
 
 def run_midas(config_file):
